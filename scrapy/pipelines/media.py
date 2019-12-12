@@ -1,5 +1,6 @@
 import functools
 import logging
+from copy import deepcopy
 from collections import defaultdict
 from twisted.internet.defer import Deferred, DeferredList, _DefGen_Return
 from twisted.python.failure import Failure
@@ -77,7 +78,10 @@ class MediaPipeline(object):
         requests = arg_to_iter(self.get_media_requests(item, info))
         dlist = [self._process_request(r, info) for r in requests]
         dfd = DeferredList(dlist, consumeErrors=1)
-        return dfd.addCallback(self.item_completed, item, info)
+		
+		# https://github.com/scrapy/scrapy/issues/4228
+		item_copied = deepcopy(item)
+        return dfd.addCallback(self.item_completed, item_copied, info)
 
     def _process_request(self, request, info):
         fp = request_fingerprint(request)
